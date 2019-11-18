@@ -119,7 +119,7 @@ class AuthTokenDAOImpl @Inject() (db: ArangoDbService) extends AuthTokenDAO {
         printer.print(token.asJson)
       )
       .map(x => {
-        println(s"x: $x")
+        //println(s"x: $x")
         println(s"Saved token: $token")
         token
       })
@@ -134,7 +134,7 @@ class AuthTokenDAOImpl @Inject() (db: ArangoDbService) extends AuthTokenDAO {
    */
   def remove(id: UUID) = {
     //Future.successful(())
-    println(s"Removing token $id")
+    //println(s"Removing token $id")
     val r = for {
       result <- find(id)
       delete <- client

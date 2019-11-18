@@ -14,6 +14,7 @@ import models.repos.ArangoDbService
 import scala.concurrent.ExecutionContext
 
 object ModelsUtils {
+  //DateTime formatter in UTC for auto circe encoding/decoding
   val utcDateFormatter =
     org.joda.time.format.DateTimeFormat.forPattern("yyyy-MM-dd'T'HH:mm:ss")
   implicit val encodeInstant: Encoder[DateTime] =
@@ -53,11 +54,11 @@ object ModelsUtils {
         count = true,
         batchSize = 1
       )
-    println(s"Query: $query")
+    //println(s"Query: $query")
     db.client
       .getQueryResult(db.dbName, collectionName, q)
       .map(r => {
-        println(s"executeQueryForSingleResult: $r")
+        //println(s"executeQueryForSingleResult: $r")
         r match {
           case Left(value) =>
             throw value
@@ -89,11 +90,11 @@ object ModelsUtils {
         count = true,
         batchSize = batchSize
       )
-    println(s"Query: $query")
+    //println(s"Query: $query")
     db.client
       .getQueryResult(db.dbName, collectionName, q)
       .map(r => {
-        println(s"executeQueryForResults: $r")
+        //println(s"executeQueryForResults: $r")
         r match {
           case Left(value) =>
             throw value

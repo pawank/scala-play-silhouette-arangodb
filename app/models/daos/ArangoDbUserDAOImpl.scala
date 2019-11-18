@@ -80,6 +80,7 @@ class ArangoDbUserDAOImpl @Inject() (db: ArangoDbService) extends UserDAO {
 
   /**
    * Saves a user.
+   * Ideally it should use UPSERT feature of the backend store but as of now it checks whether User exists or not and accordingly insert/update the record
    *
    * @param user The user to save.
    * @return The saved user.
@@ -99,8 +100,8 @@ class ArangoDbUserDAOImpl @Inject() (db: ArangoDbService) extends UserDAO {
                 printer.print(user.asJson)
               )
               .map(x => {
-                println(s"x: $x")
-                println(s"Updated user: $user")
+                //println(s"x: $x")
+                //println(s"Updated user: $user")
                 user
               })
           case _ =>
@@ -111,8 +112,8 @@ class ArangoDbUserDAOImpl @Inject() (db: ArangoDbService) extends UserDAO {
                 printer.print(user.asJson)
               )
               .map(x => {
-                println(s"x: $x")
-                println(s"Saved user: $user")
+                //println(s"x: $x")
+                //println(s"Saved user: $user")
                 user
               })
         }
