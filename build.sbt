@@ -6,11 +6,13 @@ name := "play-silhouette-seed"
 
 version := "6.0.0"
 
-scalaVersion := "2.12.8"
+scalaVersion := "2.12.10"
 
 resolvers += Resolver.jcenterRepo
 
 resolvers += "Sonatype snapshots" at "https://oss.sonatype.org/content/repositories/snapshots/"
+
+resolvers += "Local Ivy Repository" at "file:///" + Path.userHome.absolutePath + "/.ivy2/local"
 
 libraryDependencies ++= Seq(
   "com.mohiva" %% "play-silhouette" % "6.1.0",
@@ -19,7 +21,7 @@ libraryDependencies ++= Seq(
   "com.mohiva" %% "play-silhouette-crypto-jca" % "6.1.0",
   "com.mohiva" %% "play-silhouette-totp" % "6.1.0",
   "org.webjars" %% "webjars-play" % "2.7.0",
-  "org.webjars" % "bootstrap" % "3.3.7-1" exclude("org.webjars", "jquery"),
+  "org.webjars" % "bootstrap" % "3.3.7-1" exclude ("org.webjars", "jquery"),
   "org.webjars" % "jquery" % "3.2.1",
   "net.codingwell" %% "scala-guice" % "4.1.0",
   "com.iheart" %% "ficus" % "1.4.3",
@@ -32,6 +34,12 @@ libraryDependencies ++= Seq(
   ehcache,
   guice,
   filters
+)
+
+//libraryDependencies ++= Seq("com.arangodb" %% "arangodb-java-driver" % "5.0.0")
+libraryDependencies ++= Seq(
+  "com.charlesahunt" %% "proteus" % "0.6.7",
+  "io.circe" %% "circe-optics" % "0.12.0"
 )
 
 lazy val root = (project in file(".")).enablePlugins(PlayScala)
@@ -68,3 +76,6 @@ ScalariformKeys.preferences := ScalariformKeys.preferences.value
   .setPreference(FormatXml, false)
   .setPreference(DoubleIndentConstructorArguments, false)
   .setPreference(DanglingCloseParenthesis, Preserve)
+
+//ThisBuild / useCoursier := false
+//useCoursier := false

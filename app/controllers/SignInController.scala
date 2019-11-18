@@ -16,6 +16,7 @@ import play.api.mvc.{ AnyContent, ControllerComponents, Request }
 import utils.auth.DefaultEnv
 
 import scala.concurrent.{ ExecutionContext, Future }
+import models.repos.ArangoDbService
 
 /**
  * The `Sign In` controller.
@@ -44,15 +45,19 @@ class SignInController @Inject() (
   webJarsUtil: WebJarsUtil,
   assets: AssetsFinder,
   ex: ExecutionContext
-) extends AbstractAuthController(silhouette, configuration, clock) with I18nSupport {
+) extends AbstractAuthController(silhouette, configuration, clock)
+  with I18nSupport {
 
   /**
    * Views the `Sign In` page.
    *
    * @return The result to display.
    */
-  def view = silhouette.UnsecuredAction.async { implicit request: Request[AnyContent] =>
-    Future.successful(Ok(views.html.signIn(SignInForm.form, socialProviderRegistry)))
+  def view = silhouette.UnsecuredAction.async {
+    implicit request: Request[AnyContent] =>
+      Future.successful(
+        Ok(views.html.signIn(SignInForm.form, socialProviderRegistry))
+      )
   }
 
   /**
@@ -60,28 +65,55 @@ class SignInController @Inject() (
    *
    * @return The result to display.
    */
-  def submit = silhouette.UnsecuredAction.async { implicit request: Request[AnyContent] =>
-    SignInForm.form.bindFromRequest.fold(
-      form => Future.successful(BadRequest(views.html.signIn(form, socialProviderRegistry))),
-      data => {
-        val credentials = Credentials(data.email, data.password)
-        credentialsProvider.authenticate(credentials).flatMap { loginInfo =>
-          userService.retrieve(loginInfo).flatMap {
-            case Some(user) if !user.activated =>
-              Future.successful(Ok(views.html.activateAccount(data.email)))
-            case Some(user) =>
-              authInfoRepository.find[GoogleTotpInfo](user.loginInfo).flatMap {
-                case Some(totpInfo) => Future.successful(Ok(views.html.totp(TotpForm.form.fill(TotpForm.Data(
-                  user.userID, totpInfo.sharedKey, data.rememberMe)))))
-                case _ => authenticateUser(user, data.rememberMe)
-              }
-            case None => Future.failed(new IdentityNotFoundException("Couldn't find user"))
-          }
-        }.recover {
-          case _: ProviderException =>
-            Redirect(routes.SignInController.view()).flashing("error" -> Messages("invalid.credentials"))
+  def submit = silhouette.UnsecuredAction.async {
+    implicit request: Request[AnyContent] =>
+      SignInForm.form.bindFromRequest.fold(
+        form =>
+          Future.successful(
+            BadRequest(views.html.signIn(form, socialProviderRegistry))
+          ),
+        data => {
+          val credentials = Credentials(data.email, data.password)
+          credentialsProvider
+            .authenticate(credentials)
+            .flatMap {
+              loginInfo =>
+                userService.retrieve(loginInfo).flatMap {
+                  case Some(user) if !user.activated =>
+                    Future
+                      .successful(Ok(views.html.activateAccount(data.email)))
+                  case Some(user) =>
+                    authInfoRepository
+                      .find[GoogleTotpInfo](user.loginInfo)
+                      .flatMap {
+                        case Some(totpInfo) =>
+                          Future.successful(
+                            Ok(
+                              views.html.totp(
+                                TotpForm.form.fill(
+                                  TotpForm.Data(
+                                    user.userID,
+                                    totpInfo.sharedKey,
+                                    data.rememberMe
+                                  )
+                                )
+                              )
+                            )
+                          )
+                        case _ => authenticateUser(user, data.rememberMe)
+                      }
+                  case None =>
+                    Future.failed(
+                      new IdentityNotFoundException("Couldn't find user")
+                    )
+                }
+            }
+            .recover {
+              case _: ProviderException =>
+                Redirect(routes.SignInController.view())
+                  .flashing("error" -> Messages("invalid.credentials"))
+            }
         }
-      }
-    )
+      )
   }
 }

@@ -14,4 +14,6 @@ import org.joda.time.DateTime
 case class AuthToken(
   id: UUID,
   userID: UUID,
-  expiry: DateTime)
+  expiry: DateTime,
+  _key: Option[String] = None
+)

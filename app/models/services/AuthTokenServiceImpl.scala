@@ -12,6 +12,8 @@ import scala.concurrent.{ ExecutionContext, Future }
 import scala.concurrent.duration._
 import scala.language.postfixOps
 
+import models.ModelsUtils._
+
 /**
  * Handles actions to auth tokens.
  *
@@ -35,7 +37,11 @@ class AuthTokenServiceImpl @Inject() (
    * @return The saved auth token.
    */
   def create(userID: UUID, expiry: FiniteDuration = 5 minutes) = {
-    val token = AuthToken(UUID.randomUUID(), userID, clock.now.withZone(DateTimeZone.UTC).plusSeconds(expiry.toSeconds.toInt))
+    val token = AuthToken(
+      UUID.randomUUID(),
+      userID,
+      clock.now.withZone(DateTimeZone.UTC).plusSeconds(expiry.toSeconds.toInt)
+    )
     authTokenDAO.save(token)
   }
 
@@ -52,9 +58,11 @@ class AuthTokenServiceImpl @Inject() (
    *
    * @return The list of deleted tokens.
    */
-  def clean = authTokenDAO.findExpired(clock.now.withZone(DateTimeZone.UTC)).flatMap { tokens =>
-    Future.sequence(tokens.map { token =>
-      authTokenDAO.remove(token.id).map(_ => token)
-    })
-  }
+  def clean =
+    authTokenDAO.findExpired(clock.now.withZone(DateTimeZone.UTC)).flatMap {
+      tokens =>
+        Future.sequence(tokens.map { token =>
+          authTokenDAO.remove(token.id).map(_ => token)
+        })
+    }
 }

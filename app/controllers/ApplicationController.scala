@@ -29,17 +29,20 @@ class ApplicationController @Inject() (
   webJarsUtil: WebJarsUtil,
   assets: AssetsFinder,
   ex: ExecutionContext
-) extends AbstractController(components) with I18nSupport {
+) extends AbstractController(components)
+  with I18nSupport {
 
   /**
    * Handles the index action.
    *
    * @return The result to display.
    */
-  def index = silhouette.SecuredAction.async { implicit request: SecuredRequest[DefaultEnv, AnyContent] =>
-    authInfoRepository.find[GoogleTotpInfo](request.identity.loginInfo).map { totpInfoOpt =>
-      Ok(views.html.home(request.identity, totpInfoOpt))
-    }
+  def index = silhouette.SecuredAction.async {
+    implicit request: SecuredRequest[DefaultEnv, AnyContent] =>
+      authInfoRepository.find[GoogleTotpInfo](request.identity.loginInfo).map {
+        totpInfoOpt =>
+          Ok(views.html.home(request.identity, totpInfoOpt))
+      }
   }
 
   /**
@@ -47,9 +50,10 @@ class ApplicationController @Inject() (
    *
    * @return The result to display.
    */
-  def signOut = silhouette.SecuredAction.async { implicit request: SecuredRequest[DefaultEnv, AnyContent] =>
-    val result = Redirect(routes.ApplicationController.index())
-    silhouette.env.eventBus.publish(LogoutEvent(request.identity, request))
-    silhouette.env.authenticatorService.discard(request.authenticator, result)
+  def signOut = silhouette.SecuredAction.async {
+    implicit request: SecuredRequest[DefaultEnv, AnyContent] =>
+      val result = Redirect(routes.ApplicationController.index())
+      silhouette.env.eventBus.publish(LogoutEvent(request.identity, request))
+      silhouette.env.authenticatorService.discard(request.authenticator, result)
   }
 }
