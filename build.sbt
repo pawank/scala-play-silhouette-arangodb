@@ -2,7 +2,7 @@ import com.typesafe.sbt.SbtScalariform._
 
 import scalariform.formatter.preferences._
 
-name := "play-silhouette-seed"
+name := "all-in-one-portal"
 
 version := "6.0.0"
 
@@ -39,7 +39,11 @@ libraryDependencies ++= Seq(
 //libraryDependencies ++= Seq("com.arangodb" %% "arangodb-java-driver" % "5.0.0")
 libraryDependencies ++= Seq(
   "com.charlesahunt" %% "proteus" % "0.6.7",
-  "io.circe" %% "circe-optics" % "0.12.0"
+  "io.circe" %% "circe-optics" % "0.12.0",
+  "com.outr" %% "scarango-driver" % "2.1.0",
+  "org.apache.tika" % "tika" % "1.22",
+  "org.apache.tika" % "tika-parsers" % "1.22",
+  "com.lihaoyi" %% "ammonite-ops" % "1.8.1"
 )
 
 lazy val root = (project in file(".")).enablePlugins(PlayScala)

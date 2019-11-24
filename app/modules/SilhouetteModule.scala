@@ -121,7 +121,7 @@ class SilhouetteModule extends AbstractModule with ScalaModule {
     bind[DelegableAuthInfoDAO[OpenIDInfo]]
       .toInstance(new InMemoryAuthInfoDAO[OpenIDInfo])
 
-    bind[models.repos.ArangoDbService].to[models.repos.ArangoDbRepoService]
+    bind[models.repos.ArangoDbService].asEagerSingleton()
   }
 
   /**

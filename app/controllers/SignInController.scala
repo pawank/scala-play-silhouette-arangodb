@@ -48,6 +48,10 @@ class SignInController @Inject() (
 ) extends AbstractAuthController(silhouette, configuration, clock)
   with I18nSupport {
 
+  def testing(): Unit = {
+    println(utils.FileUtils.getFiles("/Users/pawan"))
+  }
+
   /**
    * Views the `Sign In` page.
    *
@@ -55,6 +59,7 @@ class SignInController @Inject() (
    */
   def view = silhouette.UnsecuredAction.async {
     implicit request: Request[AnyContent] =>
+      testing
       Future.successful(
         Ok(views.html.signIn(SignInForm.form, socialProviderRegistry))
       )

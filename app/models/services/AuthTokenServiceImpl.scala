@@ -12,8 +12,6 @@ import scala.concurrent.{ ExecutionContext, Future }
 import scala.concurrent.duration._
 import scala.language.postfixOps
 
-import models.ModelsUtils._
-
 /**
  * Handles actions to auth tokens.
  *

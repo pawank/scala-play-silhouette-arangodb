@@ -3,18 +3,30 @@ package models.daos
 import java.util.UUID
 import javax.inject.Inject
 
-import models.ModelsUtils._
 import models.AuthToken
 import models.daos.AuthTokenDAOImpl._
 import org.joda.time.DateTime
+import models.ModelsUtils._
 
 import scala.collection.mutable
 import scala.concurrent.Future
 
 import scala.collection.mutable
 import scala.concurrent.Future
-import com.charlesahunt.proteus.DocumentClient
 import models.repos.ArangoDbService
+import com.outr.arango.{
+  ArangoDB,
+  ArangoDatabase,
+  Credentials,
+  ArangoException,
+  DatabaseState,
+  Document,
+  DocumentModel,
+  Id,
+  Index,
+  IndexType,
+  Serialization
+}
 
 import io.circe.generic.auto._
 import io.circe.parser.decode
@@ -26,41 +38,15 @@ import io.circe._, io.circe.parser._
  * Give access to the [[AuthToken]] object.
  */
 class AuthTokenDAOImpl @Inject() (db: ArangoDbService) extends AuthTokenDAO {
-  private[this] val client: DocumentClient = db.client
+  //val db: ArangoDbService = ArangoDbService("Auth")
+  private[this] val client: ArangoDatabase = db.client
   val collectionName: String = "tokens"
   implicit val ec: scala.concurrent.ExecutionContext =
     scala.concurrent.ExecutionContext.global
   val printer = Printer.noSpaces.copy(dropNullValues = true)
-
-  def parse(result: Future[Option[Json]]): Future[Option[AuthToken]] = {
-    result.map(result => {
-      result match {
-        case Some(json) =>
-          json.as[AuthToken] match {
-            case Left(error) =>
-              println(error)
-              None
-            case Right(obj) => Some(obj)
-          }
-        case _ =>
-          //throw new Exception("No token found")
-          None
-      }
-    })
-  }
-
-  def parseResults(result: Future[Seq[Json]]): Future[Seq[AuthToken]] = {
-    result.map(result => {
-      result.map(json => {
-        json.as[AuthToken] match {
-          case Left(error) =>
-            println(error)
-            throw new Exception(error.toString())
-          case Right(obj) => obj
-        }
-      })
-    })
-  }
+  val collection = db.setupCollection(collectionName)
+  implicit val serialization: Serialization[AuthToken] =
+    Serialization.auto[AuthToken]
 
   /**
    * Finds a token by its ID.
@@ -69,12 +55,17 @@ class AuthTokenDAOImpl @Inject() (db: ArangoDbService) extends AuthTokenDAO {
    * @return The found token or None if no token for the given ID could be found.
    */
   def find(id: UUID): Future[Option[AuthToken]] = {
-    //Future.successful(tokens.get(id))
+    import com.outr.arango._
+    import com.outr.arango.api.APITransaction
+    /*
     val query = s"""FOR p IN $collectionName FILTER p.id == "${
       id
         .toString()
     }" RETURN p"""
-    parse(executeQueryForSingleResult(collectionName, query)(db))
+     */
+    val pk = id.toString()
+    //val queryAQL = aql"FOR p IN $collectionName FILTER p.id == $pk RETURN p"
+    Future.successful(None)
   }
 
   /**
@@ -97,10 +88,7 @@ class AuthTokenDAOImpl @Inject() (db: ArangoDbService) extends AuthTokenDAO {
       dateTime
         .toString()
     }" RETURN p"""
-    parseResults(
-      executeQueryForResults(collectionName, query, 999)(db)
-        .map(r => r._2.toSeq)
-    )
+    Future.successful(Seq.empty)
   }
 
   /**
@@ -112,17 +100,10 @@ class AuthTokenDAOImpl @Inject() (db: ArangoDbService) extends AuthTokenDAO {
   def save(token: AuthToken) = {
     //tokens += (token.id -> token)
     println(s"Saving token: $token")
-    client
-      .createDocument(
-        db.dbName,
-        collectionName,
-        printer.print(token.asJson)
-      )
-      .map(x => {
-        //println(s"x: $x")
-        println(s"Saved token: $token")
-        token
-      })
+    val result: Future[AuthToken] = collection.document
+      .upsertOne(token)
+      .map(u => token.copy(_key = u._id.map(_._key)))
+    result
     //Future.successful(token)
   }
 
@@ -135,16 +116,12 @@ class AuthTokenDAOImpl @Inject() (db: ArangoDbService) extends AuthTokenDAO {
   def remove(id: UUID) = {
     //Future.successful(())
     //println(s"Removing token $id")
-    val r = for {
-      result <- find(id)
-      delete <- client
-        .deleteDocument(
-          db.dbName,
-          collectionName,
-          result.map(s => s._key.getOrElse("")).getOrElse("")
-        )
-    } yield ()
-    r
+    collection.document
+      .deleteOne(Id[String](id.toString(), collectionName))
+      .map { id =>
+        println(s"ID after delete: $id")
+        id._id
+      }
   }
 }
 
@@ -156,5 +133,6 @@ object AuthTokenDAOImpl {
   /**
    * The list of tokens.
    */
+
   //val tokens: mutable.HashMap[UUID, AuthToken] = mutable.HashMap()
 }
